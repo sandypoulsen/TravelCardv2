@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">TravelCardv2</string>
+    <string name="dialog_message">Message</string>
+    <string name="dialog_title">Title</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+    <string name="goto_registrations_button">Go to Registrations</string>
+    <string name="cancel_last_registration">Cancel last checkin</string>
+    <string name="insert_money">Insert 100 kr</string>
+</resources>
