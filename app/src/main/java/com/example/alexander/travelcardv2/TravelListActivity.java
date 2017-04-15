@@ -1,6 +1,8 @@
 package com.example.alexander.travelcardv2;
 
+import android.content.DialogInterface;
 import android.graphics.Color;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,6 +18,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+
+import io.realm.OrderedRealmCollection;
+import io.realm.RealmRecyclerViewAdapter;
 
 public class TravelListActivity extends AppCompatActivity {
 
@@ -36,9 +41,8 @@ public class TravelListActivity extends AppCompatActivity {
         mRegistrationRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         mRegistrationDB = TravelRegistrationDB.get();
-        List<TravelRegistration> registrations = mRegistrationDB.getTravelRegistrations();
 
-        mAdapter = new TravelRegistrationAdapter(registrations);
+        mAdapter = new TravelRegistrationAdapter(mRegistrationDB.getTravelRegistrations());
         mRegistrationRecyclerView.setAdapter(mAdapter);
 
         button_insert_money = (Button) findViewById(R.id.button_insert_money);
@@ -47,10 +51,23 @@ public class TravelListActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                mRegistrationDB.doPayment(100);
-                mAdapter.notifyDataSetChanged();
+                AlertDialog alertDialog = new AlertDialog.Builder(TravelListActivity.this).create();
+                alertDialog.setTitle("Payment confirmation");
+                alertDialog.setMessage("You are about to withdraw 100 kr from your bank");
+                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                mRegistrationDB.doPayment(100);
+                                mAdapter.notifyDataSetChanged();
 
-                Toast.makeText(getApplicationContext(), "You have inserted 100 kr", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "You have inserted 100 kr", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                alertDialog.show();
+
+
+
             }
         });
     }
@@ -74,6 +91,7 @@ public class TravelListActivity extends AppCompatActivity {
                 mTypeTextView.setText("Checked in at: " + registration.getIdentifier());
             } else if(registration.getType().equals("checkout")) {
                 mTypeTextView.setText("Checked out at: " + registration.getIdentifier());
+                mView.setBackgroundColor(Color.GREEN);
             } else if(registration.getType().equals("payment")) {
                 mTypeTextView.setText("Payment");
             }
@@ -98,10 +116,11 @@ public class TravelListActivity extends AppCompatActivity {
 
     }
 
-    private class TravelRegistrationAdapter extends RecyclerView.Adapter<TravelRegistrationHolder> {
-        private List<TravelRegistration> mRegistrationList;
+    private class TravelRegistrationAdapter extends RealmRecyclerViewAdapter<TravelRegistration, TravelRegistrationHolder> {
+        private OrderedRealmCollection<TravelRegistration> mRegistrationList;
 
-        public TravelRegistrationAdapter(List<TravelRegistration> registrationList) {
+        public TravelRegistrationAdapter(OrderedRealmCollection<TravelRegistration> registrationList) {
+            super(TravelListActivity.this, registrationList, true);
             mRegistrationList = registrationList;
         }
 

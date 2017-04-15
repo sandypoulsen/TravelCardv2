@@ -1,34 +1,38 @@
 package com.example.alexander.travelcardv2;
 
+import java.util.UUID;
+
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
+
 /**
  * Created by alexander on 08-04-17.
  */
 
-public class TravelRegistration {
+public class TravelRegistration extends RealmObject {
 
     private int major;
-    private int minor;
     private String identifier;
     private long created;
     private boolean cancelled;
     private int amount;
+    @PrimaryKey
     private String id;
     private String type;
 
+    public TravelRegistration() {
+        id = UUID.randomUUID().toString();
+    }
+
+    public TravelRegistration(String id) {
+        this.id = id;
+    }
     public int getMajor() {
         return major;
     }
 
     public void setMajor(int major) {
         this.major = major;
-    }
-
-    public int getMinor() {
-        return minor;
-    }
-
-    public void setMinor(int minor) {
-        this.minor = minor;
     }
 
     public String getIdentifier() {
