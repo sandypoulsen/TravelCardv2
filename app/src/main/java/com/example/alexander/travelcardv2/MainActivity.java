@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
     private final static String ipad = "monitored region Ipad";
     private final static String checkinMajorIndex = "checkinmajor";
 
-    private final static String DBNAME = "travels2";
+    private final static String DBNAME = "travels4"; // last travels2
     private final static String HOST = "130.226.142.162";
     private final static String USERNAME = "napo@itu.dk";
     private final static String PASSWORD = "mmad#2napo";
@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
 
     private final static Region[] regions = {
 
+            /*
             new Region(
                     ipad,
                     UUID.fromString("8492e75f-4fd6-469d-b132-043fe94921d8"),
@@ -47,7 +48,16 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
             new Region(
                     iphone,
                     UUID.fromString("8492e75f-4fd6-469d-b132-043fe94921d8"),
-                    9842, null)
+                    9842, null),*/
+
+            new Region(
+                    "2. floor",
+                    UUID.fromString("E3B54450-AB73-4D79-85D6-519EAF0F45D9"),
+                    2, null),
+            new Region(
+                    "5. floor",
+                    UUID.fromString("E3B54450-AB73-4D79-85D6-519EAF0F45D9"),
+                    5, null)
 
     };
 
@@ -85,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
 
         checkin = (Button) findViewById(R.id.button_checkin);
         checkin.setEnabled(false);
-        checkin.setText("No check in allowed");
+        checkin.setText("You cannot check in here.");
 
         cancel_last_checkin = (Button) findViewById(R.id.cancel_last_checkin);
 
@@ -141,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
                         mRegistrationDB.checkOut(region);
                         savings.setText(mRegistrationDB.getSavings() + "");
 
-                        Toast.makeText(getApplicationContext(), "Thank you for using TravelCard", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Thank you for using TravelCard", Toast.LENGTH_LONG).show();
 
                     }
 
@@ -158,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
 
                     if (!mRegistrationDB.isCancellationAllowed()) {
                         checkin.setEnabled(false);
-                        checkin.setText("No check in is allowed");
+                        checkin.setText("You cannot check in here.");
                     }
 
                     majorindex = -1;
@@ -176,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
             public void onClick(View v) {
 
                 if (mRegistrationDB.getSavings() < 10) {
-                    Toast.makeText(getApplicationContext(), "You need to insert money on your TravelCard.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "You need to insert money on your TravelCard.", Toast.LENGTH_LONG).show();
                 } else {
                     String id = UUID.randomUUID().toString();
 
@@ -212,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
                     checkin.setText("Check in at " + region.getIdentifier());
                     checkin.setEnabled(true);
                 } else {
-                    checkin.setText("No check in allowed");
+                    checkin.setText("You cannot check in here.");
                     checkin.setEnabled(false);
                 }
 

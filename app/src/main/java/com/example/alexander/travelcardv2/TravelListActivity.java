@@ -111,14 +111,15 @@ public class TravelListActivity extends AppCompatActivity {
                 mView.setBackgroundColor(Color.GREEN);
             } else if(registration.getType().equals("payment")) {
                 mTypeTextView.setText("Payment");
+            } else if(registration.getType().equals("canceled")) {
+                mTypeTextView.setText("Cancellation");
+                mView.setBackgroundColor(Color.RED);
             }
 
             mDateTextView.setText(dateFormatted);
             mPriceTextView.setText(registration.getAmount() + "");
 
-            if(registration.getType().equals("checkin") && registration.isCancelled()) {
-                mView.setBackgroundColor(Color.RED);
-            }
+
 
         }
 

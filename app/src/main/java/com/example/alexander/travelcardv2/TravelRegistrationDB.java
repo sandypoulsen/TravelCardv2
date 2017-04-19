@@ -31,7 +31,6 @@ public class TravelRegistrationDB {
     }
 
     private TravelRegistrationDB() {
-        //mTravelRegistrations = new ArrayList<>();
     }
 
     public void addTravelRegistration(TravelRegistration registration) {
@@ -42,19 +41,6 @@ public class TravelRegistrationDB {
                 realm.copyToRealm(fregistration);
             }
         });
-        //mTravelRegistrations.add(registration);
-    }
-
-    public void removeTravelRegistration(TravelRegistration registration) {
-        final TravelRegistration fregistration = registration;
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                RealmResults<TravelRegistration> rows = realm.where(TravelRegistration.class).equalTo("id", fregistration.getId()).findAll();
-                if(rows.size() > 0) rows.get(0).deleteFromRealm();
-            }
-        });
-        //mTravelRegistrations.remove(registration);
     }
 
 
@@ -68,14 +54,12 @@ public class TravelRegistrationDB {
             TravelRegistration registration = iterator.previous();
             if(registration.getType().equals("checkout")) {
                 return null;
-            } else if(registration.getType().equals("checkin")) {
-                if( !registration.isCancelled()) {
-                    return registration;
-                } else {
-                    return null;
-                }
-
+            } else if(registration.getType().equals("canceled")) {
+                return null;
+            } else if (registration.getType().equals("checkin")){
+                return registration;
             }
+
         }
         return null;
     }
@@ -96,11 +80,14 @@ public class TravelRegistrationDB {
 
 
     public void cancelLastCheckin() {
-        TravelRegistration registration = getLastTravelRegistration();
 
-        realm.beginTransaction();
-        registration.setCancelled(true);
-        realm.commitTransaction();
+        TravelRegistration registration = new TravelRegistration();
+        registration.setIdentifier("Canceled");
+        registration.setType("canceled");
+        registration.setCreated(System.currentTimeMillis());
+        registration.setAmount(0);
+        registration.setMajor(0);
+        addTravelRegistration(registration);
     }
 
 
@@ -110,11 +97,7 @@ public class TravelRegistrationDB {
 
     public boolean isCancellationAllowed() {
         TravelRegistration registration = getLastTravelRegistration();
-        if(registration != null) {
-            return true;
-        } else {
-            return false;
-        }
+        return (registration != null);
     }
 
     public int getSavings() {
@@ -144,8 +127,6 @@ public class TravelRegistrationDB {
     }
 
     public void checkOut(Region region) {
-
-        TravelRegistration checkinRegistration = getLastTravelRegistration();
 
         TravelRegistration registration = new TravelRegistration();
         registration.setIdentifier(region.getIdentifier());

@@ -14,7 +14,6 @@ public class TravelRegistration extends RealmObject {
     private int major;
     private String identifier;
     private long created;
-    private boolean cancelled;
     private int amount;
     @PrimaryKey
     private String id;
@@ -50,16 +49,6 @@ public class TravelRegistration extends RealmObject {
     public void setCreated(long created) {
         this.created = created;
     }
-
-
-    public boolean isCancelled() {
-        return cancelled;
-    }
-
-    public void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
-    }
-
 
     public int getAmount() {
         return amount;
