@@ -2,6 +2,7 @@ package com.example.alexander.travelcardv2;
 
 import android.content.DialogInterface;
 import android.graphics.Color;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -26,10 +27,8 @@ import io.realm.RealmRecyclerViewAdapter;
 
 public class TravelListActivity extends AppCompatActivity {
 
-    private RecyclerView mRegistrationRecyclerView;
-    private TravelRegistrationDB mRegistrationDB;
-    private TravelRegistrationAdapter mAdapter;
-    private Button button_insert_money;
+    private FragmentManager fm;
+    private TravelListFragment travelListFragment;
 
 
     @Override
@@ -40,40 +39,16 @@ public class TravelListActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle("Registrations");
 
+        fm = getSupportFragmentManager();
 
-        mRegistrationRecyclerView = (RecyclerView) findViewById(R.id.travels_recycler_view);
-        mRegistrationRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        travelListFragment = (TravelListFragment) fm.findFragmentById(R.id.fragment_container);
 
-        mRegistrationDB = TravelRegistrationDB.get();
-
-        mAdapter = new TravelRegistrationAdapter(mRegistrationDB.getTravelRegistrations());
-        mRegistrationRecyclerView.setAdapter(mAdapter);
-
-        button_insert_money = (Button) findViewById(R.id.button_insert_money);
-
-        button_insert_money.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                AlertDialog alertDialog = new AlertDialog.Builder(TravelListActivity.this).create();
-                alertDialog.setTitle("Payment confirmation");
-                alertDialog.setMessage("You are about to withdraw 100 kr from your bank");
-                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                                mRegistrationDB.doPayment(100);
-                                mAdapter.notifyDataSetChanged();
-
-                                Toast.makeText(getApplicationContext(), "You have inserted 100 kr", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                alertDialog.show();
-
-
-
-            }
-        });
+        if (travelListFragment == null) {
+            travelListFragment = new TravelListFragment();
+            fm.beginTransaction()
+                    .add(R.id.fragment_container, travelListFragment)
+                    .commit();
+        }
     }
 
     @Override
@@ -88,76 +63,4 @@ public class TravelListActivity extends AppCompatActivity {
     }
 
 
-
-    private class TravelRegistrationHolder extends RecyclerView.ViewHolder {
-
-        private TextView mTypeTextView;
-        private TextView mDateTextView;
-        private TextView mPriceTextView;
-        private View mView;
-
-        public void bindRegistration(final com.example.alexander.travelcardv2.TravelRegistration registration, final int position) {
-
-            long timestamp = registration.getCreated();
-
-            Date date = new Date(timestamp);
-            DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-            String dateFormatted = formatter.format(date);
-
-            if(registration.getType().equals("checkin")) {
-                mTypeTextView.setText("Checked in at: " + registration.getIdentifier());
-            } else if(registration.getType().equals("checkout")) {
-                mTypeTextView.setText("Checked out at: " + registration.getIdentifier());
-                mView.setBackgroundColor(Color.GREEN);
-            } else if(registration.getType().equals("payment")) {
-                mTypeTextView.setText("Payment");
-            } else if(registration.getType().equals("canceled")) {
-                mTypeTextView.setText("Cancellation");
-                mView.setBackgroundColor(Color.RED);
-            }
-
-            mDateTextView.setText(dateFormatted);
-            mPriceTextView.setText(registration.getAmount() + "");
-
-
-
-        }
-
-        public TravelRegistrationHolder(View itemView) {
-            super(itemView);
-            mView = itemView;
-            mTypeTextView = (TextView) itemView.findViewById(R.id.list_item_text_view_type);
-            mDateTextView = (TextView) itemView.findViewById(R.id.list_item_text_view_date);
-            mPriceTextView = (TextView) itemView.findViewById(R.id.list_item_text_view_price);
-
-        }
-
-    }
-
-    private class TravelRegistrationAdapter extends RealmRecyclerViewAdapter<TravelRegistration, TravelRegistrationHolder> {
-        private OrderedRealmCollection<TravelRegistration> mRegistrationList;
-
-        public TravelRegistrationAdapter(OrderedRealmCollection<TravelRegistration> registrationList) {
-            super(TravelListActivity.this, registrationList, true);
-            mRegistrationList = registrationList;
-        }
-
-        @Override
-        public TravelRegistrationHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            LayoutInflater layoutInflater = LayoutInflater.from(TravelListActivity.this);
-            View view = layoutInflater.inflate(R.layout.registration_list_item, parent, false);
-            return new TravelRegistrationHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(TravelRegistrationHolder holder, int position) {
-            TravelRegistration registration = mRegistrationList.get(position);
-            holder.bindRegistration(registration, position);
-        }
-
-        @Override
-        public int getItemCount() {
-            return mRegistrationList.size();
-        }
-    }
 }

@@ -1,108 +1,268 @@
 package com.example.alexander.travelcardv2;
 
-import android.content.Context;
-import android.net.Uri;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.estimote.sdk.Beacon;
+import com.estimote.sdk.BeaconManager;
+import com.estimote.sdk.Region;
+import com.estimote.sdk.SystemRequirementsChecker;
+
+import java.util.List;
+import java.util.UUID;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link MonitorFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link MonitorFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class MonitorFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private final static String iphone = "Monitored region Iphone";
+    private final static String ipad = "monitored region Ipad";
 
-    private OnFragmentInteractionListener mListener;
+    private final static String TAG = "MonitorFragment";
 
-    public MonitorFragment() {
-        // Required empty public constructor
+    private TravelRegistrationDB mRegistrationDB;
+    private BeaconManager beaconManager;
+    private Button checkin;
+    private TextView savings;
+    private Button goto_registrations_button;
+    private Button cancel_last_checkin;
+    private int majorindex;
+
+    private final static String checkinMajorIndex = "checkinmajor";
+
+    private final static Region[] regions = {
+
+
+            new Region(
+                    ipad,
+                    UUID.fromString("8492e75f-4fd6-469d-b132-043fe94921d8"),
+                    1729, null),
+
+            new Region(
+                    iphone,
+                    UUID.fromString("8492e75f-4fd6-469d-b132-043fe94921d8"),
+                    9842, null)
+
+            /*
+            new Region(
+                    "2. floor",
+                    UUID.fromString("E3B54450-AB73-4D79-85D6-519EAF0F45D9"),
+                    2, null),
+            new Region(
+                    "5. floor",
+                    UUID.fromString("E3B54450-AB73-4D79-85D6-519EAF0F45D9"),
+                    5, null)
+                    */
+
+    };
+
+    private Region getRegion(int major) {
+        for (Region region : regions) {
+            if (region.getMajor() == major) {
+                return region;
+            }
+        }
+        return null;
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment MonitorFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static MonitorFragment newInstance(String param1, String param2) {
-        MonitorFragment fragment = new MonitorFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_monitor, container, false);
-    }
+        View v = inflater.inflate(R.layout.fragment_monitor, container, false);
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
+
+        mRegistrationDB = TravelRegistrationDB.get();
+
+        checkin = (Button) v.findViewById(R.id.button_checkin);
+        checkin.setEnabled(false);
+        checkin.setText("You cannot check in here.");
+
+        cancel_last_checkin = (Button) v.findViewById(R.id.cancel_last_checkin);
+
+        if (savedInstanceState != null) {
+
+            majorindex = savedInstanceState.getInt(checkinMajorIndex, -1);
+            if (majorindex != -1 && majorindex != 0) {
+                Region region = getRegion(majorindex);
+                checkin.setEnabled(true);
+                checkin.setText("Check in at " + region.getIdentifier());
+            }
         }
-    }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
+        TravelRegistration checkInRegistration = mRegistrationDB.getLastTravelRegistration();
+
+        if (checkInRegistration != null) {
+
+            cancel_last_checkin.setEnabled(true);
+            checkin.setText("Checked in at " + checkInRegistration.getIdentifier() + "\n" + "Travel id: " + checkInRegistration.getId());
+            checkin.setEnabled(false);
+
+        }
+
+
+        goto_registrations_button = (Button) v.findViewById(R.id.goto_registrations_button);
+
+        goto_registrations_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), TravelListActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        savings = (TextView) v.findViewById(R.id.textview_savings);
+        savings.setText(mRegistrationDB.getSavings() + "");
+
+        beaconManager = new BeaconManager(getActivity());
+
+
+        beaconManager.setMonitoringListener(new BeaconManager.MonitoringListener() {
+            @Override
+            public void onEnteredRegion(Region region, List<Beacon> list) {
+
+                majorindex = region.getMajor();
+                checkin.setEnabled(true);
+                checkin.setText("Check in at " + region.getIdentifier());
+                cancel_last_checkin.setEnabled(false);
+                Log.i(TAG, "entered region: " + region.getIdentifier());
+
+                TravelRegistration checkInRegistration = mRegistrationDB.getLastTravelRegistration();
+
+                if (checkInRegistration != null) {
+
+                    if (checkInRegistration.getMajor() != region.getMajor()) {
+
+                        mRegistrationDB.checkOut(region);
+                        savings.setText(mRegistrationDB.getSavings() + "");
+
+                        Toast.makeText(getActivity(), "Thank you for using TravelCard", Toast.LENGTH_LONG).show();
+
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void onExitedRegion(Region region) {
+
+                Log.i(TAG, "exited region: " + region.getIdentifier());
+
+                if (region.getMajor() == majorindex) {
+
+                    if (mRegistrationDB.getLastTravelRegistration() == null) {
+                        checkin.setEnabled(false);
+                        checkin.setText("You cannot check in here.");
+                    }
+
+                    majorindex = -1;
+
+                }
+
+            }
+        });
+
+
+        checkin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (mRegistrationDB.getSavings() < 10) {
+                    Toast.makeText(getActivity(), "You need to insert money on your TravelCard.", Toast.LENGTH_LONG).show();
+                } else {
+                    String id = UUID.randomUUID().toString();
+
+                    Region region = getRegion(majorindex);
+                    mRegistrationDB.checkIn(region, id);
+
+                    cancel_last_checkin.setEnabled(true);
+                    checkin.setText("Checked in at " + region.getIdentifier() + "\n" + "Travel id: " + id);
+                    checkin.setEnabled(false);
+                }
+
+
+            }
+        });
+
+        if (checkInRegistration != null) {
+            cancel_last_checkin.setEnabled(true);
         } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+            cancel_last_checkin.setEnabled(false);
         }
+
+        cancel_last_checkin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mRegistrationDB.cancelLastCheckin();
+                cancel_last_checkin.setEnabled(false);
+
+
+                if (majorindex != 0 && majorindex != -1) {
+                    Region region = getRegion(majorindex);
+                    checkin.setText("Check in at " + region.getIdentifier());
+                    checkin.setEnabled(true);
+                } else {
+                    checkin.setText("You cannot check in here.");
+                    checkin.setEnabled(false);
+                }
+
+            }
+        });
+
+        return v;
+
+
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(checkinMajorIndex, majorindex);
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
+            @Override
+            public void onServiceReady() {
+
+                for (Region region : regions) {
+                    beaconManager.startMonitoring(region);
+                }
+            }
+        });
+        beaconManager.setBackgroundScanPeriod(5000, 0);
+    }
+
+    @Override
+    public void onDestroy() {
+        beaconManager.disconnect();
+        super.onDestroy();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        SystemRequirementsChecker.checkWithDefaultDialogs(getActivity());
+        savings.setText(mRegistrationDB.getSavings() + "");
     }
 }
