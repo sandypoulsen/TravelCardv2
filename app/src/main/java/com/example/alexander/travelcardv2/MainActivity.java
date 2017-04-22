@@ -109,10 +109,12 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
             }
         }
 
-        if (mRegistrationDB.isCancellationAllowed()) {
-            TravelRegistration registration = mRegistrationDB.getLastTravelRegistration();
+        TravelRegistration checkInRegistration = mRegistrationDB.getLastTravelRegistration();
+
+        if (checkInRegistration != null) {
+
             cancel_last_checkin.setEnabled(true);
-            checkin.setText("Checked in at " + registration.getIdentifier() + "\n" + "Travel id: " + registration.getId());
+            checkin.setText("Checked in at " + checkInRegistration.getIdentifier() + "\n" + "Travel id: " + checkInRegistration.getId());
             checkin.setEnabled(false);
 
         }
@@ -144,9 +146,11 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
                 cancel_last_checkin.setEnabled(false);
                 Log.i(TAG, "entered region: " + region.getIdentifier());
 
-                if (mRegistrationDB.isCancellationAllowed()) {
+                TravelRegistration checkInRegistration = mRegistrationDB.getLastTravelRegistration();
 
-                    if (mRegistrationDB.getLastTravelRegistration().getMajor() != region.getMajor()) {
+                if (checkInRegistration != null) {
+
+                    if (checkInRegistration.getMajor() != region.getMajor()) {
 
                         mRegistrationDB.checkOut(region);
                         savings.setText(mRegistrationDB.getSavings() + "");
@@ -166,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
 
                 if (region.getMajor() == majorindex) {
 
-                    if (!mRegistrationDB.isCancellationAllowed()) {
+                    if (mRegistrationDB.getLastTravelRegistration() == null) {
                         checkin.setEnabled(false);
                         checkin.setText("You cannot check in here.");
                     }
@@ -177,8 +181,6 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
 
             }
         });
-
-
 
 
         checkin.setOnClickListener(new View.OnClickListener() {
@@ -202,9 +204,7 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
             }
         });
 
-
-
-        if (mRegistrationDB.isCancellationAllowed()) {
+        if (checkInRegistration != null) {
             cancel_last_checkin.setEnabled(true);
         } else {
             cancel_last_checkin.setEnabled(false);
@@ -280,7 +280,7 @@ public class MainActivity extends AppCompatActivity implements SyncUser.Callback
     }
 
     private void setUpRealmSync() {
-        if(SyncUser.currentUser() == null) {
+        if (SyncUser.currentUser() == null) {
             SyncCredentials myCredentials = SyncCredentials.usernamePassword(USERNAME, PASSWORD, false);
             SyncUser.loginAsync(myCredentials, AUTH_URL, this);
         } else {

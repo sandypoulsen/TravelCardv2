@@ -1,12 +1,8 @@
 package com.example.alexander.travelcardv2;
 
-import android.util.Log;
-
 import com.estimote.sdk.Region;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.ListIterator;
 
 import io.realm.OrderedRealmCollection;
@@ -23,9 +19,9 @@ public class TravelRegistrationDB {
     private static Realm realm;
 
     public static TravelRegistrationDB get() {
-        if(sTravelRegistrationDB == null) {
+        if (sTravelRegistrationDB == null) {
             realm = realm.getDefaultInstance();
-            sTravelRegistrationDB  = new TravelRegistrationDB();
+            sTravelRegistrationDB = new TravelRegistrationDB();
         }
         return sTravelRegistrationDB;
     }
@@ -50,20 +46,19 @@ public class TravelRegistrationDB {
 
         ListIterator<TravelRegistration> iterator = registrations.listIterator(registrations.size());
 
-        while(iterator.hasPrevious()) {
+        while (iterator.hasPrevious()) {
             TravelRegistration registration = iterator.previous();
-            if(registration.getType().equals("checkout")) {
+            if (registration.getType().equals("checkout")) {
                 return null;
-            } else if(registration.getType().equals("canceled")) {
+            } else if (registration.getType().equals("canceled")) {
                 return null;
-            } else if (registration.getType().equals("checkin")){
+            } else if (registration.getType().equals("checkin")) {
                 return registration;
             }
 
         }
         return null;
     }
-
 
 
     public void doPayment(int amount) {
@@ -76,7 +71,6 @@ public class TravelRegistrationDB {
         registration.setMajor(0);
         addTravelRegistration(registration);
     }
-
 
 
     public void cancelLastCheckin() {
@@ -95,18 +89,13 @@ public class TravelRegistrationDB {
         return realm.where(TravelRegistration.class).findAll();
     }
 
-    public boolean isCancellationAllowed() {
-        TravelRegistration registration = getLastTravelRegistration();
-        return (registration != null);
-    }
-
     public int getSavings() {
 
         RealmResults<TravelRegistration> registrations = realm.where(TravelRegistration.class).findAll();
         Iterator<TravelRegistration> iterator = registrations.iterator();
         int result = 0;
 
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             TravelRegistration registration = iterator.next();
             result += registration.getAmount();
         }
