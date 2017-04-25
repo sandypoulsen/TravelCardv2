@@ -39,7 +39,7 @@ public class MonitorFragment extends Fragment {
 
     private final static Region[] regions = {
 
-
+            /*
             new Region(
                     ipad,
                     UUID.fromString("8492e75f-4fd6-469d-b132-043fe94921d8"),
@@ -49,8 +49,8 @@ public class MonitorFragment extends Fragment {
                     iphone,
                     UUID.fromString("8492e75f-4fd6-469d-b132-043fe94921d8"),
                     9842, null)
+            */
 
-            /*
             new Region(
                     "2. floor",
                     UUID.fromString("E3B54450-AB73-4D79-85D6-519EAF0F45D9"),
@@ -59,7 +59,7 @@ public class MonitorFragment extends Fragment {
                     "5. floor",
                     UUID.fromString("E3B54450-AB73-4D79-85D6-519EAF0F45D9"),
                     5, null)
-                    */
+
 
     };
 
@@ -94,6 +94,8 @@ public class MonitorFragment extends Fragment {
 
         cancel_last_checkin = (Button) v.findViewById(R.id.cancel_last_checkin);
 
+        // this will show last region you entered although there is no longer a beacon signal.
+        // In other cases the disconnect in onDestroy will reset the monitoring, and the correct checkin message is shown.
         if (savedInstanceState != null) {
 
             majorindex = savedInstanceState.getInt(checkinMajorIndex, -1);
